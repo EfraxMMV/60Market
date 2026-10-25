@@ -442,7 +442,7 @@
             color: var(--brand-secondary-orange);
         }
 
-        /* ── MODAL PRE-REGISTRO ─────────────────────────────────────── */
+        /* ── MODAL PRE-REGISTRO (Optimizado para Móviles) ──────────────── */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -452,10 +452,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            padding: 0.75rem;
+            /* Reducido ligeramente para aprovechar pantallas angostas */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.25s ease;
+            overflow-y: auto;
+            /* Permite hacer scroll en el overlay si el contenido desborda */
+            -webkit-overflow-scrolling: touch;
         }
 
         .modal-overlay.active {
@@ -467,13 +471,25 @@
             background: var(--brand-deep-navy);
             border: 1px solid rgba(240, 85, 0, 0.25);
             border-radius: 20px;
-            padding: 2.5rem 2rem;
+            padding: 2rem 1.5rem;
+            /* Padding adaptado para móviles */
             max-width: 440px;
             width: 100%;
             position: relative;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(240, 85, 0, 0.1);
             transform: translateY(16px);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+            /* LÓGICA DE RESPONSIVIDAD MÓVIL (EVITA DESAJUSTES) */
+            max-height: 88vh;
+            max-height: 88dvh;
+            /* Altura dinámica para barras de navegación móviles */
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            /* Scroll interno en pantallas pequeñas o con teclado abierto */
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
         }
 
         .modal-overlay.active .modal-card {
@@ -496,6 +512,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            z-index: 5;
         }
 
         .modal-close:hover {
@@ -513,10 +530,12 @@
             justify-content: center;
             margin-bottom: 1.25rem;
             font-size: 1.5rem;
+            flex-shrink: 0;
         }
 
         .modal-title {
-            font-size: 1.45rem;
+            font-size: 1.35rem;
+            /* Ligeramente ajustado para evitar saltos de línea molestos en móviles */
             font-weight: 800;
             color: var(--brand-pure-white);
             margin-bottom: 0.4rem;
@@ -524,14 +543,14 @@
         }
 
         .modal-subtitle {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: #94a3b8;
             line-height: 1.5;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .modal-form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 0.9rem;
         }
 
         .modal-label {
@@ -551,10 +570,12 @@
             color: var(--brand-pure-white);
             padding: 0.75rem 1rem;
             border-radius: 10px;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            /* Fijo en 16px equivalentes para evitar zoom automático indeseado en iOS */
             font-family: inherit;
             outline: none;
             transition: border-color 0.2s, background 0.2s;
+            box-sizing: border-box;
         }
 
         .modal-input:focus {
@@ -570,7 +591,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.6rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.1rem;
         }
 
         .role-btn {
@@ -579,12 +600,14 @@
             color: #94a3b8;
             padding: 0.65rem 0.5rem;
             border-radius: 10px;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
             font-family: inherit;
+            white-space: nowrap;
+            /* Evita que quiebren mal los textos de los roles */
         }
 
         .role-btn.active,
@@ -607,6 +630,7 @@
             font-family: inherit;
             transition: all 0.2s;
             letter-spacing: -0.01em;
+            margin-top: 0.5rem;
         }
 
         .modal-submit:hover {
@@ -1008,7 +1032,7 @@
                             <span class="highlight">Vender</span>
                         </h2>
                         <p class="fallback-subtitle">
-                            Un minuto puede cambiar una venta. Sé de los primeros comercios en
+                            Un minuto puede cambiar una venta. Se de los primeros comercios en
                             publicar tu oferta local en <strong style="color: #FEFEFE;">{{ $currentRegion->name }}</strong>.
                         </p>
                         <button class="btn-notify" id="openPreregisterModal" onclick="openModal()">
