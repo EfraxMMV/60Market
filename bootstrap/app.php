@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Render (y cualquier PaaS) termina TLS en su balanceador y reenvía HTTP al contenedor.
+        // Confiar en X-Forwarded-* permite que Laravel detecte HTTPS y genere URLs https://,
+        // evitando que el navegador bloquee peticiones fetch() por "mixed content".
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);

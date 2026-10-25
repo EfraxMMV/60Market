@@ -1397,7 +1397,8 @@
             feedback.className = 'modal-feedback';
 
             try {
-                const res = await fetch('{{ route('campaign.pre-register') }}', {
+                // URL relativa: hereda el esquema/host de la página (evita mixed content tras proxy).
+                const res = await fetch('{{ route('campaign.pre-register', [], false) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
