@@ -13,8 +13,20 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+/* 
+|--------------------------------------------------------------------------
+| 1. Portada de Pre-Registro 
+|-------------------------------------------------------------------------- 
+*/
+Route::get('/', function () {
+    return view('preregister');
+})->name('preregister');
+
+// Pre-registro de campaña - Guardado de lead (D02, publico/anonimo)
+Route::post('/campaign/pre-register', [CampaignLeadController::class, ''])->name('campaign.pre-register');
+
 // -------------------------------------------------------------
-// 1. Visor Principal en Vivo & Redirección (D01, D02, D03, D04, D09)
+// 2. Visor Principal en Vivo & Redirección (D01, D02, D03, D04, D09)
 // -------------------------------------------------------------
 Route::get('/', [ViewerController::class, 'index'])->name('viewer.home');
 Route::get('/r/{regionSlug}', [ViewerController::class, 'index'])->name('viewer.region');
@@ -30,7 +42,7 @@ Route::post('/api/ads/impression', [ViewerController::class, 'impression'])->nam
 
 
 // -------------------------------------------------------------
-// 2. Autenticación y Registro Empresarial (D06)
+// 3. Autenticación y Registro Empresarial (D06)
 // -------------------------------------------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -44,7 +56,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 
 // -------------------------------------------------------------
-// 3. Panel de Administración de Anuncios y Borradores (D06, D07, D08)
+// 4. Panel de Administración de Anuncios y Borradores (D06, D07, D08)
 // -------------------------------------------------------------
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AdvertisementController::class, 'index'])->name('dashboard');
@@ -58,15 +70,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/ads/{advertisement}', [AdvertisementController::class, 'destroy'])->name('ads.destroy');
 
     // -------------------------------------------------------------
-    // 4. Compra y Programación de Turnos (Incremento 4: Mercado Pago Sandbox)
+    // 5. Compra y Programación de Turnos (Incremento 4: Mercado Pago Sandbox)
     // -------------------------------------------------------------
     Route::get('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'checkout'])->name('ads.checkout');
     Route::post('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'process'])->name('ads.checkout.process');
     Route::get('/ads/{advertisement}/checkout/success', [SlotCheckoutController::class, 'success'])->name('ads.checkout.success');
 });
-
-// -------------------------------------------------------------
-// 5. Pre-registro de Campaña — Incremento 5 (D02, público/anónimo)
-// -------------------------------------------------------------
-Route::post('/campaign/pre-register', [CampaignLeadController::class, 'store'])->name('campaign.pre-register');
-
