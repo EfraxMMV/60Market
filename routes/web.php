@@ -70,7 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/ads/{advertisement}', [AdvertisementController::class, 'destroy'])->name('ads.destroy');
 
     // -------------------------------------------------------------
-    // 5. Compra y Programación de Turnos (Incremento 4: Mercado Pago Sandbox)
+    // 5 . Compra y Programación de Turnos (Incremento 4: Mercado Pago Sandbox)
     // -------------------------------------------------------------
     Route::get('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'checkout'])->name('ads.checkout');
     Route::post('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'process'])->name('ads.checkout.process');

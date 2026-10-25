@@ -544,7 +544,7 @@
 
         .modal-subtitle {
             font-size: 0.88rem;
-            color: #94a3b8;
+            color: #ffffffff;
             line-height: 1.5;
             margin-bottom: 1.25rem;
         }
