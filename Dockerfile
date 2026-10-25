@@ -1,5 +1,5 @@
 # Imagen base de PHP 8.4 con
-Apache FROM php:8.4-apache
+FROM php:8.4-apache
 # Instalar dependencias del sistema y extensiones necesarias (PostgreSQL, Redis, Zip)
 RUN apt-get update &amp;&amp; apt-get install -y \
 	libpq-dev \
