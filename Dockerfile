@@ -1,16 +1,15 @@
-```
 FROM php:8.4-apache
 
 # Copiar el instalador oficial de extensiones de PHP
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
 # Instalar utilidades básicas del sistema
-RUN apt-get update &amp;&amp; apt-get install -y \
+RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
     curl \
-    &amp;&amp; rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensiones requeridas de PHP (PostgreSQL, Zip, BCMath y Redis)
 RUN install-php-extensions pdo_pgsql zip bcmath redis
@@ -32,7 +31,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 # Configurar permisos requeridos para Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    &amp;&amp; chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Apuntar Apache al directorio public/ de Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -42,6 +41,4 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 EXPOSE 80
 
 # Ejecutar migraciones, seeders y arrancar Apache automáticamente
-CMD ["sh", "-c", "php artisan migrate --force &amp;&amp; php artisan db:seed --force &amp;&amp; apache2-foreground"]
-
-```
+CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]
