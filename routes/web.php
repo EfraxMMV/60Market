@@ -23,7 +23,7 @@ Route::get('/', function () {
 })->name('preregister');
 
 // Pre-registro de campaña - Guardado de lead (D02, publico/anonimo)
-Route::post('/campaign/pre-register', [CampaignLeadController::class, ''])->name('campaign.pre-register');
+Route::post('/campaign/pre-register', [CampaignLeadController::class, 'store'])->name('campaign.pre-register');
 
 // -------------------------------------------------------------
 // 2. Visor Principal en Vivo & Redirección (D01, D02, D03, D04, D09)
