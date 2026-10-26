@@ -86,6 +86,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Administradores de plataforma (60Market)
+    |--------------------------------------------------------------------------
+    |
+    | Correos (separados por coma) con acceso a datos sensibles de toda la
+    | plataforma, como el panel de pre-registros. Ej.: ADMIN_EMAILS=a@x.com,b@x.com
+    |
+    */
+
+    'admin_emails' => array_values(array_filter(array_map(
+        fn ($email) => strtolower(trim($email)),
+        explode(',', (string) env('ADMIN_EMAILS', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

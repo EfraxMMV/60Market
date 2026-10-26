@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdvertisementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignLeadController;
+use App\Http\Controllers\PreRegisterController;
 use App\Http\Controllers\SlotCheckoutController;
 use App\Http\Controllers\ViewerController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,12 @@ Route::get('/', function () {
 
 // Pre-registro de campaña - Guardado de lead (D02, publico/anonimo)
 Route::post('/campaign/pre-register', [CampaignLeadController::class, 'store'])->name('campaign.pre-register');
+
+// Pre-registro "Avisarme del lanzamiento" (visor público). Protegido por CSRF (ruta web)
+// y limitado a 10 envíos por minuto por IP para frenar spam.
+Route::post('/pre-register', [PreRegisterController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('pre-register.store');
 
 // -------------------------------------------------------------
 // 2. Visor Principal en Vivo & Redirección (D01, D02, D03, D04, D09)
@@ -75,4 +82,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'checkout'])->name('ads.checkout');
     Route::post('/ads/{advertisement}/checkout', [SlotCheckoutController::class, 'process'])->name('ads.checkout.process');
     Route::get('/ads/{advertisement}/checkout/success', [SlotCheckoutController::class, 'success'])->name('ads.checkout.success');
+
+    // -------------------------------------------------------------
+    // 6. Pre-registros "Avisarme del lanzamiento" (solo ADMIN_EMAILS)
+    // -------------------------------------------------------------
+    Route::middleware('can:view-pre-registrations')->group(function () {
+        Route::get('/dashboard/pre-registros', [PreRegisterController::class, 'index'])->name('dashboard.pre-registrations');
+        Route::get('/dashboard/pre-registros/export', [PreRegisterController::class, 'export'])->name('dashboard.pre-registrations.export');
+    });
 });

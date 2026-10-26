@@ -353,9 +353,14 @@
                 📺 Visor en Vivo
             </a>
             @auth
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     📊 Mis Anuncios
                 </a>
+                @can('view-pre-registrations')
+                    <a href="{{ route('dashboard.pre-registrations') }}" class="nav-link {{ request()->routeIs('dashboard.pre-registrations*') ? 'active' : '' }}">
+                        🚀 Pre-registros
+                    </a>
+                @endcan
                 <a href="{{ route('ads.create') }}" class="btn-cta-nav">
                     <span>+</span> Nuevo Anuncio
                 </a>

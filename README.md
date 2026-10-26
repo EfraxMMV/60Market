@@ -166,3 +166,11 @@ Las siguientes decisiones forman el núcleo funcional y técnico acordado para e
 - **Modal de pre-registro:** Formulario embebido accesible desde el fallback con selector de rol (Comprador / Comerciante), campos de email y teléfono, envío AJAX con CSRF, retroalimentación de éxito/error y cierre automático tras registro exitoso.
 - **Verificado:** Migración ejecutada en PostgreSQL (`DONE 15.91ms`). Ruta `POST /campaign/pre-register` confirmada en `php artisan route:list`.
 
+
+### ✅ Incremento 5.1: Pre-registros unificados, panel de administración y exportación CSV (Completado y verificado)
+
+- **Tabla `pre_registrations`:** Migración [`2026_10_26_000001_create_pre_registrations_table.php`](./database/migrations/2026_10_26_000001_create_pre_registrations_table.php) con `contact` (correo o teléfono normalizado), `region_id` (FK nullable, `nullOnDelete`), `user_type` (`shopper`/`merchant`, opcional) e índice único `(contact, region_id)`. Copia automáticamente los leads existentes de `campaign_leads` (sin duplicados; la tabla original se conserva).
+- **Captura:** [`PreRegisterController@store`](./app/Http/Controllers/PreRegisterController.php) en `POST /pre-register` (ruta web con CSRF, `throttle:10,1`). Responde `201` al crear, `200` si el contacto ya existía en la región y `422` ante errores de validación. Registra `Log::info('pre_registration.*')` con el contacto enmascarado.
+- **Modal del visor:** Un solo campo de contacto (correo o WhatsApp), validación en cliente, estado de carga y mensajes diferenciados para 422/419/429/5xx y fallos de red.
+- **Panel `/dashboard/pre-registros`:** Listado paginado con filtros por región, tipo y rango de fechas, y exportación CSV (UTF-8 con BOM y protección contra inyección de fórmulas). Restringido a los correos definidos en `ADMIN_EMAILS` mediante el Gate `view-pre-registrations`.
+- **Pruebas:** [`tests/Feature/PreRegistrationTest.php`](./tests/Feature/PreRegistrationTest.php) — 12 pruebas y 52 aserciones, ejecutadas contra PostgreSQL/PostGIS.

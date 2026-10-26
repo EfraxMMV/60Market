@@ -345,4 +345,10 @@ Para mantener trazabilidad durante la implementación:
   - **Modal de pre-registro:** Formulario embebido con selector de rol, campos de email/teléfono, envío AJAX con CSRF y retroalimentación inmediata. Botón de acción en `#F05500`. Enlace secundario a `/register` para comerciantes.
   - **Verificado:** Migración ejecutada en PostgreSQL (`DONE 15.91ms`). Ruta confirmada en `php artisan route:list`.
 
-Estado actual: **Incremento 5 completado y verificado.** Módulo de pre-registro y anuncio fallback operativos. Próximo paso: Incremento 6 (Chatbot de descubrimiento de ofertas por tags — sujeto a la resolución de P09).
+- **2026-10-26 (Incremento 5.1 — Pre-registros unificados, panel y exportación):**
+  - **Tabla `pre_registrations`:** sustituye funcionalmente a `campaign_leads` para el modal del visor. `contact` único (correo en minúsculas o teléfono `+?\d{8,15}`), `region_id` FK nullable con `nullOnDelete`, `user_type` opcional, índice único `(contact, region_id)`. La migración copia los leads de `campaign_leads`; esa tabla y su endpoint `POST /campaign/pre-register` se conservan como legado (pendiente decidir su retiro).
+  - **Endpoint `POST /pre-register`:** ruta web (CSRF activo; `api/*` está exento de CSRF, por eso no se usó `/api/pre-register`) con `throttle:10,1`. 201 creado · 200 duplicado · 422 validación. `Log::info` con contacto enmascarado.
+  - **Panel `/dashboard/pre-registros` + export CSV:** restringido por Gate `view-pre-registrations` a `config('app.admin_emails')` (variable `ADMIN_EMAILS`). Decisión: no existían roles de administrador y todo usuario autenticado es comercio; sin el Gate, cualquier comercio vería todos los contactos.
+  - **Verificado:** 12 pruebas nuevas (52 aserciones) en PostgreSQL/PostGIS; suite completa 44/45 (el fallo restante requiere la extensión GD local, ajeno a este cambio). Backfill y rollback verificados.
+
+Estado actual: **Incremento 5.1 completado y verificado.** Próximo paso: Incremento 6 (Chatbot de descubrimiento de ofertas por tags — sujeto a la resolución de P09).

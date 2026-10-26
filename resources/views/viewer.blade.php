@@ -1315,18 +1315,11 @@
                 </div>
                 <input type="hidden" id="selectedRole" name="user_type" value="shopper">
 
-                <!-- Campo de correo -->
+                <!-- Contacto único: correo o teléfono (el backend detecta y normaliza el formato) -->
                 <div class="modal-form-group">
-                    <label class="modal-label" for="leadEmail">Correo electrónico</label>
-                    <input type="email" id="leadEmail" name="email" class="modal-input"
-                        placeholder="tucorreo@ejemplo.com" autocomplete="email">
-                </div>
-
-                <!-- Campo de teléfono -->
-                <div class="modal-form-group">
-                    <label class="modal-label" for="leadPhone">O tu WhatsApp / teléfono</label>
-                    <input type="tel" id="leadPhone" name="phone" class="modal-input" placeholder="+52 55 1234 5678"
-                        autocomplete="tel">
+                    <label class="modal-label" for="leadContact">Correo electrónico o WhatsApp</label>
+                    <input type="text" id="leadContact" name="contact" class="modal-input" required maxlength="255"
+                        placeholder="tucorreo@ejemplo.com o +52 312 123 4567" autocomplete="email" inputmode="email">
                 </div>
 
                 <!-- Región oculta -->
@@ -1349,7 +1342,7 @@
         // ── Modal helpers ──────────────────────────────────────────────────
         function openModal() {
             document.getElementById('preregisterModal').classList.add('active');
-            document.getElementById('leadEmail').focus();
+            document.getElementById('leadContact').focus();
         }
 
         function closeModal() {
@@ -1375,30 +1368,49 @@
         }
 
         // ── Envío AJAX ─────────────────────────────────────────────────────
-        async function submitPreregister(e) {
-            e.preventDefault();
+        const SUBMIT_LABEL = '🚀 Avisarme del lanzamiento';
+        // Validación ligera en cliente (el servidor es la fuente de verdad).
+        const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const PHONE_RE = /^\+?\d{8,15}$/;
 
-            const email = document.getElementById('leadEmail').value.trim();
-            const phone = document.getElementById('leadPhone').value.trim();
+        function setFeedback(message, type) {
+            const feedback = document.getElementById('leadFeedback');
+            feedback.textContent = message;
+            feedback.className = 'modal-feedback' + (type ? ' ' + type : '');
+        }
+
+        function resetSubmitButton() {
+            const submitBtn = document.getElementById('submitLeadBtn');
+            submitBtn.disabled = false;
+            submitBtn.textContent = SUBMIT_LABEL;
+        }
+
+        async function submitPreregister(e) {
+            e.preventDefault(); // Sin recarga de página
+
+            const contact = document.getElementById('leadContact').value.trim();
             const userType = document.getElementById('selectedRole').value;
             const regionId = document.getElementById('leadRegionId').value;
-            const feedback = document.getElementById('leadFeedback');
             const submitBtn = document.getElementById('submitLeadBtn');
 
-            if (!email && !phone) {
-                feedback.textContent = 'Por favor, ingresa tu correo o teléfono.';
-                feedback.className = 'modal-feedback error';
+            const normalizedPhone = contact.replace(/[\s\-().]/g, '');
+            if (!contact) {
+                setFeedback('Ingresa tu correo electrónico o teléfono.', 'error');
+                return;
+            }
+            if (!EMAIL_RE.test(contact) && !PHONE_RE.test(normalizedPhone)) {
+                setFeedback('Ingresa un correo válido o un teléfono de 8 a 15 dígitos.', 'error');
                 return;
             }
 
+            // Estado de carga
             submitBtn.disabled = true;
             submitBtn.textContent = 'Enviando…';
-            feedback.textContent = '';
-            feedback.className = 'modal-feedback';
+            setFeedback('', null);
 
             try {
                 // URL relativa: hereda el esquema/host de la página (evita mixed content tras proxy).
-                const res = await fetch('{{ route('campaign.pre-register', [], false) }}', {
+                const res = await fetch('{{ route('pre-register.store', [], false) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1406,10 +1418,9 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     },
                     body: JSON.stringify({
-                        email: email || null,
-                        phone: phone || null,
+                        contact: contact,
                         user_type: userType,
-                        region_id: regionId ? parseInt(regionId) : null,
+                        region_id: regionId ? parseInt(regionId, 10) : null,
                     }),
                 });
 
@@ -1418,32 +1429,33 @@
                 const json = await res.json().catch(() => ({}));
 
                 if (res.ok && json.success) {
-                    feedback.textContent = json.message;
-                    feedback.className = 'modal-feedback success';
+                    setFeedback(json.message, 'success');
                     document.getElementById('preregisterForm').reset();
                     selectRole('shopper');
                     submitBtn.textContent = '✓ ¡Registrado!';
-                    setTimeout(closeModal, 2800);
-                } else {
-                    // 422: primer error de validación · 419: token CSRF/sesión expirada · otros: error del servidor
-                    const firstValidationError = json.errors ? Object.values(json.errors)[0]?.[0] : null;
-                    let message = firstValidationError || json.message;
-                    if (res.status === 419) message = 'Tu sesión expiró. Recarga la página e intenta de nuevo.';
-                    if (res.status >= 500 || !message) message = 'Ocurrió un error en el servidor. Intenta más tarde.';
-
-                    console.error('[pre-register] HTTP', res.status, json);
-                    feedback.textContent = message;
-                    feedback.className = 'modal-feedback error';
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = '🚀 Avisarme del lanzamiento';
+                    setTimeout(() => {
+                        closeModal();
+                        setFeedback('', null);
+                        resetSubmitButton();
+                    }, 3000);
+                    return;
                 }
+
+                // 422 validación · 419 CSRF/sesión expirada · 429 demasiados intentos · 5xx servidor
+                const firstValidationError = json.errors ? Object.values(json.errors)[0]?.[0] : null;
+                let message = firstValidationError || json.message;
+                if (res.status === 419) message = 'Tu sesión expiró. Recarga la página e intenta de nuevo.';
+                if (res.status === 429) message = 'Demasiados intentos. Espera un minuto e intenta de nuevo.';
+                if (res.status >= 500 || !message) message = 'Ocurrió un error en el servidor. Intenta más tarde.';
+
+                console.error('[pre-register] HTTP', res.status, json);
+                setFeedback(message, 'error');
+                resetSubmitButton();
             } catch (err) {
                 // Solo llega aquí ante un fallo real de red (fetch rechazado).
                 console.error('[pre-register] network error', err);
-                feedback.textContent = 'No se pudo conectar. Revisa tu conexión e intenta de nuevo.';
-                feedback.className = 'modal-feedback error';
-                submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Avisarme del lanzamiento';
+                setFeedback('No se pudo conectar. Revisa tu conexión e intenta de nuevo.', 'error');
+                resetSubmitButton();
             }
         }
     </script>
